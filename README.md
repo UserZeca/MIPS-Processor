@@ -20,7 +20,7 @@ Siga os passos abaixo para reproduzir a simulação:
 
 > Caso queira acessar o projeto no meu ambiente, acesse o [link do projeto no EDA Playground](https://edaplayground.com/x/mE4p).
 
-1.  Faça o upload de todos os arquivos de design (`.vhd`) e do arquivo de memória (`program.mem`) para o EDA Playground.
+1.  Faça o upload de todos os arquivos de design (`.vhd`) e do arquivo de memória (`program.mem`) para o EDA Playground (os arquivos estão na pasta design e testbench).
 2.  No painel à esquerda, configure:
       * **Simulator:** Aldec Riviera-PRO.
       * **Top Entity:** `tb_MIPS_Pipeline`
