@@ -33,8 +33,9 @@ Com a sobreposição de instruções, surgem dependências de dados e controle. 
 **Evidência de Funcionamento:**
 No teste realizado (`add $10, $8, $9`), o registrador `$9` dependia de uma instrução imediatamente anterior (Hazard EX) e o `$8` de uma instrução anterior a essa (Hazard MEM).
 
-> `image_73ef56.png`
-> **Descrição da Imagem:** Observe os sinais `s_ForwardA` e `s_ForwardB` assumindo valores `1` e `2`. O resultado da ALU (`s_EX_Int_Result`) calcula corretamente a soma `5 + 10 = 15` (`0x0F`), provando que os dados foram adiantados corretamente antes da gravação no WB.
+> ![Diagrama de ondas demonstrando a implementação da técnica de Forwarding](./assets/forwarding.png)
+> 
+> **Forwarding:** A simulação mostra s_ForwardA alternando para 2 (~66ns, Hazard MEM) e 1 (~85ns, Hazard WB), desviando corretamente o dado 0x14 para a ALU. Isso comprova que a unidade interceptou o valor nos estágios finais e o entregou à instrução atual (s_Forwarded_A_Val), resolvendo a dependência de dados sem pausar o processador.
 
 ### 3.2. Unidade de Detecção de Hazard (Stall & Flush)
 
@@ -49,8 +50,9 @@ No teste realizado (`add $10, $8, $9`), o registrador `$9` dependia de uma instr
 **Evidência de Funcionamento:**
 O teste executou `lw` seguido imediatamente de uma instrução dependente.
 
-> `image_72f434.png`
-> **Descrição da Imagem:** É possível observar o sinal `s_PC_Write` indo para nível lógico baixo ('0') e os sinais `s_Stall_IF_ID` e `s_Flush_ID_EX` indo para alto ('1') por exatamente um ciclo de clock. A instrução no estágio ID se repete por um ciclo, permitindo que o Load complete o acesso à memória.
+> ![Diagrama de ondas com Load-Use Hazard tratados](./assets/hazard.png)
+> 
+> **Load-Use Hazard:** Entre 140ns e 160ns, a unidade detecta a dependência crítica entre o lw (no estágio EX) e o add (no estágio ID). A resposta é imediata: o sinal s_PC_Write cai para 0 e os sinais s_Stall_IF_ID e s_Flush_ID_EX sobem para 1. Essa ação congela o PC e o registrador IF/ID, enquanto zera o estágio EX (bolha), forçando a instrução 109_5020 a permanecer no estágio de decodificação por um ciclo adicional até o dado estar disponível.
 
 ## 4. Fase 3: Sistema de Memória (Cache L1)
 
@@ -69,11 +71,9 @@ O Controlador de Cache intercepta as requisições do estágio MEM.
 **Evidência de Funcionamento:**
 O teste realizou duas leituras no mesmo endereço.
 
-> `image_719698.png`
-> **Descrição da Imagem:**
-> 1.  No primeiro acesso (Store), ocorre a gravação (Miss de escrita ou alocação).
-> 2.  No acesso final (Load no mesmo endereço), o sinal **`s_Hit`** vai para nível alto ('1').
-> 3.  Crucialmente, o sinal **`RAM_MemRead`** permanece em nível baixo ('0'), provando que a Cache atendeu a requisição sem acessar a Memória Principal.
+> ![Diagrama de ondas demonstrando a implementação da cache](./assets/cache.png)
+> 
+> **Memória Cache:** Na instrução final de Load (~145ns), o sinal s_Hit é ativado ('1') enquanto o acesso externo RAM_MemRead permanece inativo ('0'). Isso comprova que o controlador interceptou a requisição e entregou o dado armazenado previamente (Hit), evitando o acesso lento à memória RAM principal.
 
 ---
 
@@ -82,9 +82,9 @@ O teste realizou duas leituras no mesmo endereço.
 O projeto foi concluído com sucesso, atendendo a todos os requisitos propostos. A implementação demonstrou a complexidade e os benefícios do paralelismo em nível de instrução (ILP).
 
 **Resumo das validações:**
-* ✅ **Pipeline:** Fluxo contínuo de instruções verificado.
-* ✅ **Forwarding:** Dependências de dados resolvidas sem perda de ciclos (exceto Load-Use).
-* ✅ **Intertravamento:** Load-Use Hazards tratados corretamente com inserção de 1 ciclo de stall.
-* ✅ **Cache:** Princípio de localidade temporal comprovado através da ocorrência de Hits e redução de acesso à RAM.
+* [X] **Pipeline:** Fluxo contínuo de instruções verificado.
+* [X] **Forwarding:** Dependências de dados resolvidas sem perda de ciclos (exceto Load-Use).
+* [X] **Intertravamento:** Load-Use Hazards tratados corretamente com inserção de 1 ciclo de stall.
+* [X] **Cache:** Princípio de localidade temporal comprovado através da ocorrência de Hits e redução de acesso à RAM.
 
 O processador final é capaz de executar um subconjunto robusto do conjunto de instruções MIPS, incluindo operações aritméticas inteiras, ponto flutuante e acessos à memória otimizados.
