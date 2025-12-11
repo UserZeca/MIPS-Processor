@@ -1,13 +1,83 @@
 Desenvolvedores: Ezequias Kluyvert | Matheus Oliveira 
 # MIPS-Processor
 
-O repositório se trata do desenvolvimento do design de um **processador MIPS** com **pipeline de 5 estágios**, o objetivo foi evoluir um processador MIPS de ciclo único para essa nova arquitetura visando aumentar a vazão de instruções (throughput). Além disso, foram desenvolvidas unidades de controle de conflitos ***(Hazards)*** e um sistema de memória hierárquico com **Cache L1**.
+O projeto se trata do desenvolvimento do design de um **processador MIPS** com **pipeline de 5 estágios**, o objetivo foi evoluir um processador MIPS de ciclo único para essa nova arquitetura visando aumentar a vazão de instruções (throughput). Além disso, foram desenvolvidas unidades de controle de conflitos ***(Hazards)*** e um sistema de memória hierárquico com **Cache L1**.
 
 - O projeto foi dividido em três fases principais:
    - Estruturação do Pipeline (Registradores de barreira).
    - Resolução de Hazards (Forwarding e Detecção de Stall).
    - Implementação de Memória Cache (Mapeamento Direto).
 
+## Métodologia de Teste
+
+### 🛠️ Instruções de Execução (EDA Playground)
+
+Para validar o funcionamento completo do processador (Pipeline, Forwarding, Hazard Unit e Cache L1), utilizamos um **Testbench Mestre** (`tb_MIPS_Pipeline.vhd`) e um código de teste unificado.
+
+Siga os passos abaixo para reproduzir a simulação:
+
+### 1\. Configuração do Ambiente
+
+> Caso queira acessar o projeto no meu ambiente, acesse o [link do projeto no EDA Playground](https://edaplayground.com/x/mE4p).
+
+1.  Faça o upload de todos os arquivos de design (`.vhd`) e do arquivo de memória (`program.mem`) para o EDA Playground.
+2.  No painel à esquerda, configure:
+      * **Simulator:** Aldec Riviera-PRO.
+      * **Top Entity:** `tb_MIPS_Pipeline`
+3.  **IMPORTANTE:** No campo **Run Options**, insira o comando abaixo para habilitar a visualização de sinais internos (essencial para ver Cache e Forwarding):
+    ```bash
+    +access+r
+    ```
+
+### 2\. Sinais para Verificação (Waveform)
+
+Após clicar em **Run**, adicione os seguintes sinais na janela do EPWave para validar cada etapa do projeto:
+
+#### 🟢 Sinais Globais e Fluxo do Pipeline
+
+Monitore o fluxo básico das instruções pelos estágios.
+
+  * `s_Clk` / `s_Rst`
+  * `s_IF_Instruction[31:0]` (Instrução no estágio Fetch)
+  * `s_ID_Instruction[31:0]` (Instrução no estágio Decode)
+  * `s_EX_LUI_Data[31:0]` (Dado imediato deslocado)
+
+#### 🔵 Validação de Forwarding (Adiantamento)
+
+Sinais críticos para verificar se os dados estão sendo desviados corretamente para a ALU.
+
+  * `s_ForwardA[1:0]` (Controle do MUX A: 00=Reg, 10=MEM, 01=WB)
+  * `s_ForwardB[1:0]` (Controle do MUX B)
+  * `s_Forwarded_A_Val[31:0]` (O valor real entrando na ALU após o forwarding)
+  * `s_EX_Int_Result[31:0]` (Resultado do cálculo da ALU)
+
+#### 🔴 Validação de Hazards (Stall & Flush)
+
+Sinais que indicam quando o processador pausa para resolver conflitos (Load-Use).
+
+  * `s_PC_Write` (Se '0', o PC para de contar)
+  * `s_Stall_IF_ID` (Se '1', trava a entrada do pipeline)
+  * `s_Flush_ID_EX` (Se '1', insere uma "bolha" no estágio EX)
+
+#### 🟠 Validação da Memória Cache (L1)
+
+Sinais internos do Controlador de Cache para verificar Hits e Misses.
+
+  * `CPU_Address[31:0]` (Endereço requisitado pelo processador)
+  * `CPU_ReadData[31:0]` (Dado entregue pela Cache)
+  * `s_Hit` (Indica se o dado estava na cache)
+  * `s_Miss` (Indica se precisou buscar na RAM)
+  * `s_Tag[23:0]` e `s_Index` (Detalhes do mapeamento interno)
+  * `RAM_MemRead` (Monitora o acesso à memória física externa)
+
+#### 🏁 Validação de Escrita (Write Back)
+
+Confirmação de que o resultado final chegou ao destino correto.
+
+  * `s_WB_WriteReg_Addr[4:0]` (Endereço do registrador de destino)
+  * `s_WB_WriteData_Final[31:0]` (O dado final gravado)
+  * `RegWrite` (Habilita escrita em registradores inteiros)
+  * `s_WB_FP_RegWrite` (Habilita escrita em registradores de ponto flutuante)
 
 ## Fase 1: Arquitetura do Pipeline
 A primeira etapa consistiu em dividir o caminho de dados em 5 estágios independentes:
