@@ -1,7 +1,7 @@
 Desenvolvedores: Ezequias Kluyvert | Matheus Oliveira 
 # MIPS-Processor
 
-O repositório se trata do desenvolvimento do design de um **processador MIPS** com **pipeline de 5 estágios**, o objetivo foi evoluir um processador MIPS de ciclo único para essa nova arquitetura visando aumentar a vazão de instruções (throughput). Além disso, foram desenvolvidas unidades de controle de conflitos ***(Hazerds)*** e um sistema de memória hierárquico com **Cache L1**.
+O repositório se trata do desenvolvimento do design de um **processador MIPS** com **pipeline de 5 estágios**, o objetivo foi evoluir um processador MIPS de ciclo único para essa nova arquitetura visando aumentar a vazão de instruções (throughput). Além disso, foram desenvolvidas unidades de controle de conflitos ***(Hazards)*** e um sistema de memória hierárquico com **Cache L1**.
 
 - O projeto foi dividido em três fases principais:
    - Estruturação do Pipeline (Registradores de barreira).
